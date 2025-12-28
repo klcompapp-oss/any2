@@ -70,7 +70,7 @@ const {
 	sort, 
 	toNumber 
 } = require('./lib/myfunc');
-
+/*
 const store = makeInMemoryStore({
 	logger: pino({
 		level: 'silent'
@@ -79,6 +79,7 @@ const store = makeInMemoryStore({
 		stream: 'store'
 	})
 });
+*/
 global.opts = new Object(yargs(process.argv.slice(2)).exitProcess(false).parse());
 
 global.db = new Low(new JSONFile(`src/${tempatDB}`));
@@ -540,7 +541,7 @@ async function startHaruka() {
 			mek.message = (Object.keys(mek.message)[0] === 'ephemeralMessage') ? mek.message.ephemeralMessage.message : mek.message
 			if (mek.key && mek.key.remoteJid === 'status@broadcast') return
 			m = smsg(sock, mek, store)
-			require("./case")(sock, m, chatUpdate, mek, store)
+			require("./case")(sock, m, chatUpdate, mek, null)
 		} catch (err) {
 			console.log(chalk.yellow.bold("[ ERROR ] case.js :\n") + chalk.redBright(util.format(err)))
 		}
