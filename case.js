@@ -38,6 +38,18 @@ const util = require('util');
 const yts = require('yt-search');
 const readmore = String.fromCharCode(8206).repeat(4001);
 
+async function fetchAndPick(url) {
+	try {
+		const anu = await fetchJson(url);
+		const dataArr = Array.isArray(anu) ? anu : (anu && typeof anu === 'object') ? Object.values(anu) : [];
+		if (!dataArr || dataArr.length === 0) return null;
+		return pickRandom(dataArr);
+	} catch (e) {
+		console.log('fetchAndPick error', url, e);
+		return null;
+	}
+}
+
 const { 
 	igdl, 
 	ttdl, 
@@ -3028,25 +3040,21 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store = null) => {
 				if (gamecek) return newReply('Masih ada sesi yang belum selesai!');
 				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
 				try {
-					let anu = await fetchJson('https://raw.githubusercontent.com/BochilTeam/database/master/games/tebakgambar.json')
-					let result = await pickRandom(anu)
-					console.log("Jawaban: " + result.jawaban)
+					let result = await fetchAndPick('https://raw.githubusercontent.com/BochilTeam/database/master/games/tebakgambar.json');
+					if (!result) return newReply('*Gagal memuat database permainan (kosong).* ☹️');
+					console.log("Jawaban: " + (result.jawaban || result.name || result.title || 'unknown'));
 					tebakgambar[m.chat] = [
 						await sock.sendMessage(m.chat, {
-							image: {
-								url: result.img
-							},
+							image: { url: result.img },
 							caption: `Silahkan Jawab Soal Di Atas Ini\n\nDeskripsi : ${result.deskripsi}\nWaktu : ${(120000 / 1000).toFixed(2)} detik\n\n_Ketik .nyerah Untuk Menyerah..._\n_Ketik .bantuan Untuk Petunjuk..._`
-						}, {
-							quoted: m
-						}), result, 250,
+						}, { quoted: m }), result, 250,
 						setTimeout(() => {
 							if (tebakgambar[m.chat]) {
-								waktuHabis(result.jawaban)
-								delete tebakgambar[m.chat]
+								waktuHabis(result.jawaban);
+								delete tebakgambar[m.chat];
 							}
 						}, 120000)
-					]
+					];
 				} catch (error) {
 					console.log(error);
 					newReply('*Gagal memuat database dari server*. ☹️');
@@ -3059,25 +3067,21 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store = null) => {
 				if (gamecek) return newReply('Masih ada sesi yang belum selesai!');
 				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
 				try {
-					let anu = await fetchJson('https://raw.githubusercontent.com/qisyana/scrape/main/tebakgame.json')
-					let result = await pickRandom(anu)
-					console.log("Jawaban: " + result.jawaban)
+					let result = await fetchAndPick('https://raw.githubusercontent.com/qisyana/scrape/main/tebakgame.json');
+					if (!result) return newReply('*Gagal memuat database permainan (kosong).* ☹️');
+					console.log("Jawaban: " + (result.jawaban || result.name || 'unknown'));
 					tebakgame[m.chat] = [
 						await sock.sendMessage(m.chat, {
-							image: {
-								url: result.img
-							},
+							image: { url: result.img },
 							caption: `Gambar diatas adalah game?\n\nWaktu : ${(120000 / 1000).toFixed(2)} detik\n\n_Ketik .nyerah Untuk Menyerah..._\n_Ketik .bantuan Untuk Petunjuk..._`
-						}, {
-							quoted: m
-						}), result, 250,
+						}, { quoted: m }), result, 250,
 						setTimeout(() => {
 							if (tebakgame[m.chat]) {
-								waktuHabis(result.jawaban)
-								delete tebakgame[m.chat]
+								waktuHabis(result.jawaban);
+								delete tebakgame[m.chat];
 							}
 						}, 120000)
-					]
+					];
 				} catch (error) {
 					console.log(error);
 					newReply('*Gagal memuat database dari server*. ☹️');
@@ -3228,25 +3232,21 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store = null) => {
 				if (gamecek) return newReply('Masih ada sesi yang belum selesai!');
 				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
 				try {
-					let anu = await fetchJson('https://api.siputzx.my.id/api/games/tebakhewan')
-					let result = await pickRandom(anu)
-					console.log("Jawaban: " + result.title)
+					let result = await fetchAndPick('https://api.siputzx.my.id/api/games/tebakhewan');
+					if (!result) return newReply('*Gagal memuat database permainan (kosong).* ☹️');
+					console.log("Jawaban: " + (result.title || result.jawaban || 'unknown'));
 					tebakhewan[m.chat] = [
 						await sock.sendMessage(m.chat, {
-							image: {
-								url: result.url
-							},
+							image: { url: result.url },
 							caption: `Hewan Apakah Ini?\n\nWaktu : ${(120000 / 1000).toFixed(2)} detik\n\n_Ketik .nyerah Untuk Menyerah..._\n_Ketik .bantuan Untuk Petunjuk..._`
-						}, {
-							quoted: m
-						}), result, 250,
+						}, { quoted: m }), result, 250,
 						setTimeout(() => {
 							if (tebakhewan[m.chat]) {
-								waktuHabis(result.title)
-								delete tebakhewan[m.chat]
+								waktuHabis(result.title);
+								delete tebakhewan[m.chat];
 							}
 						}, 120000)
-					]
+					];
 				} catch (error) {
 					console.log(error);
 					newReply('*Gagal memuat database dari server*. ☹️');
@@ -3261,9 +3261,10 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store = null) => {
 				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
 				try {
 					let res = await fetchJson('https://www.sock.my.id/cdn/game/characters.json')
-					let anu = res.data
-					let result = await pickRandom(anu)
-					console.log("Jawaban: " + result.name)
+					let anu = res && res.data ? res.data : (Array.isArray(res) ? res : []);
+					if (!anu || anu.length === 0) return newReply('*Gagal memuat database permainan (kosong).* ☹️');
+					let result = pickRandom(anu)
+					console.log("Jawaban: " + (result.name || result.jawaban || 'unknown'))
 					tebakchara[m.chat] = [
 						await sock.sendMessage(m.chat, {
 							image: {
@@ -3292,9 +3293,9 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store = null) => {
 				if (gamecek) return newReply('Masih ada sesi yang belum selesai!');
 				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
 				try {
-					let anu = await fetchJson('https://www.sock.my.id/cdn/game/tebaklogo.json')
-					let result = await pickRandom(anu)
-					console.log("Jawaban: " + result.jawaban)
+					let result = await fetchAndPick('https://www.sock.my.id/cdn/game/tebaklogo.json');
+					if (!result) return newReply('*Gagal memuat database permainan (kosong).* ☹️');
+					console.log("Jawaban: " + (result.jawaban || result.name || 'unknown'))
 					tebaklogo[m.chat] = [
 						await sock.sendMessage(m.chat, {
 							image: {
@@ -3396,9 +3397,9 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store = null) => {
 				if (gamecek) return newReply('Masih ada sesi yang belum selesai!');
 				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
 				try {
-					let anu = await fetchJson('https://www.sock.my.id/cdn/game/asahotak.json')
-					let result = await pickRandom(anu)
-					console.log("Jawaban: " + result.jawaban)
+					let result = await fetchAndPick('https://www.sock.my.id/cdn/game/asahotak.json');
+					if (!result) return newReply('*Gagal memuat database permainan (kosong).* ☹️');
+					console.log("Jawaban: " + (result.jawaban || result.soal || 'unknown'))
 					asahotak[m.chat] = [
 						await sock.sendText(m.chat, `Silahkan Jawab Pertanyaan Berikut\n\n${result.soal}\nWaktu : ${(120000 / 1000).toFixed(2)} detik\n\n_Ketik .nyerah Untuk Menyerah..._\n_Ketik .bantuan Untuk Petunjuk..._`, m), result, 250,
 						setTimeout(() => {
@@ -3420,9 +3421,9 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store = null) => {
 				if (gamecek) return newReply('Masih ada sesi yang belum selesai!');
 				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
 				try {
-					let anu = await fetchJson('https://www.sock.my.id/cdn/game/lengkapikalimat.json')
-					let result = await pickRandom(anu)
-					console.log("Jawaban: " + result.jawaban)
+					let result = await fetchAndPick('https://www.sock.my.id/cdn/game/lengkapikalimat.json');
+					if (!result) return newReply('*Gagal memuat database permainan (kosong).* ☹️');
+					console.log("Jawaban: " + (result.jawaban || result.soal || 'unknown'))
 					lengkapikalimat[m.chat] = [
 						await sock.sendText(m.chat, `Silahkan Jawab Pertanyaan Berikut\n\n${result.soal}\nWaktu : ${(120000 / 1000).toFixed(2)} detik\n\n_Ketik .nyerah Untuk Menyerah..._\n_Ketik .bantuan Untuk Petunjuk..._`, m), result, 250,
 						setTimeout(() => {
@@ -3444,9 +3445,9 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store = null) => {
 				if (gamecek) return newReply('Masih ada sesi yang belum selesai!');
 				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
 				try {
-					let anu = await fetchJson('https://raw.githubusercontent.com/BochilTeam/database/master/games/tebakbendera2.json')
-					let result = await pickRandom(anu)
-					console.log("Jawaban: " + result.name)
+					let result = await fetchAndPick('https://raw.githubusercontent.com/BochilTeam/database/master/games/tebakbendera2.json');
+					if (!result) return newReply('*Gagal memuat database permainan (kosong).* ☹️');
+					console.log("Jawaban: " + (result.name || result.jawaban || 'unknown'))
 					tebakbendera[m.chat] = [
 						await sock.sendMessage(m.chat, {
 							image: {
@@ -3475,9 +3476,9 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store = null) => {
 				if (gamecek) return newReply('Masih ada sesi yang belum selesai!');
 				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
 				try {
-					let anu = await fetchJson('https://raw.githubusercontent.com/BochilTeam/database/master/games/tebakkalimat.json')
-					let result = await pickRandom(anu)
-					console.log("Jawaban: " + result.jawaban)
+					let result = await fetchAndPick('https://raw.githubusercontent.com/BochilTeam/database/master/games/tebakkalimat.json');
+					if (!result) return newReply('*Gagal memuat database permainan (kosong).* ☹️');
+					console.log("Jawaban: " + (result.jawaban || result.soal || 'unknown'))
 					tebakkalimat[m.chat] = [
 						await sock.sendText(m.chat, `Silahkan Jawab Pertanyaan Berikut\n\n${result.soal}\nWaktu : ${(120000 / 1000).toFixed(2)} detik\n\n_Ketik .nyerah Untuk Menyerah..._\n_Ketik .bantuan Untuk Petunjuk..._`, m), result, 250,
 						setTimeout(() => {
@@ -3499,9 +3500,9 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store = null) => {
 				if (gamecek) return newReply('Masih ada sesi yang belum selesai!');
 				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
 				try {
-					let anu = await fetchJson('https://raw.githubusercontent.com/BochilTeam/database/master/games/siapakahaku.json')
-					let result = await pickRandom(anu)
-					console.log("Jawaban: " + result.jawaban)
+					let result = await fetchAndPick('https://raw.githubusercontent.com/BochilTeam/database/master/games/siapakahaku.json');
+					if (!result) return newReply('*Gagal memuat database permainan (kosong).* ☹️');
+					console.log("Jawaban: " + (result.jawaban || result.soal || 'unknown'))
 					siapaaku[m.chat] = [
 						await sock.sendText(m.chat, `Silahkan Jawab Pertanyaan Berikut\n\n${result.soal}\nWaktu : ${(120000 / 1000).toFixed(2)} detik\n\n_Ketik .nyerah Untuk Menyerah..._\n_Ketik .bantuan Untuk Petunjuk..._`, m), result, 250,
 						setTimeout(() => {
@@ -3523,9 +3524,9 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store = null) => {
 				if (gamecek) return newReply('Masih ada sesi yang belum selesai!');
 				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
 				try {
-					let anu = await fetchJson('https://raw.githubusercontent.com/BochilTeam/database/master/games/tebakkimia.json')
-					let result = await pickRandom(anu)
-					console.log("Jawaban: " + result.unsur)
+					let result = await fetchAndPick('https://raw.githubusercontent.com/BochilTeam/database/master/games/tebakkimia.json');
+					if (!result) return newReply('*Gagal memuat database permainan (kosong).* ☹️');
+					console.log("Jawaban: " + (result.unsur || result.jawaban || 'unknown'))
 					tebakkimia[m.chat] = [
 						await sock.sendText(m.chat, `Apa Arti Dari Simbol : *${result.lambang}*?\nWaktu : ${(120000 / 1000).toFixed(2)} detik\n\n_Ketik .nyerah Untuk Menyerah..._\n_Ketik .bantuan Untuk Petunjuk..._`, m), result, 250,
 						setTimeout(() => {
@@ -3547,9 +3548,9 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store = null) => {
 				if (gamecek) return newReply('Masih ada sesi yang belum selesai!');
 				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
 				try {
-					let anu = await fetchJson('https://raw.githubusercontent.com/BochilTeam/database/master/games/tebaklirik.json')
-					let result = await pickRandom(anu)
-					console.log("Jawaban: " + result.jawaban)
+					let result = await fetchAndPick('https://raw.githubusercontent.com/BochilTeam/database/master/games/tebaklirik.json');
+					if (!result) return newReply('*Gagal memuat database permainan (kosong).* ☹️');
+					console.log("Jawaban: " + (result.jawaban || result.soal || 'unknown'))
 					tebaklirik[m.chat] = [
 						await sock.sendText(m.chat, `Ini Adalah Lirik Dari Lagu? : *${result.soal}*?\nWaktu : ${(120000 / 1000).toFixed(2)} detik\n\n_Ketik .nyerah Untuk Menyerah..._\n_Ketik .bantuan Untuk Petunjuk..._`, m), result, 250,
 						setTimeout(() => {
@@ -3571,9 +3572,9 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store = null) => {
 				if (gamecek) return newReply('Masih ada sesi yang belum selesai!');
 				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
 				try {
-					let anu = await fetchJson('https://raw.githubusercontent.com/BochilTeam/database/master/games/tebaktebakan.json')
-					let result = await pickRandom(anu)
-					console.log("Jawaban: " + result.jawaban)
+					let result = await fetchAndPick('https://raw.githubusercontent.com/BochilTeam/database/master/games/tebaktebakan.json');
+					if (!result) return newReply('*Gagal memuat database permainan (kosong).* ☹️');
+					console.log("Jawaban: " + (result.jawaban || result.soal || 'unknown'))
 					tebaktebakan[m.chat] = [
 						await sock.sendText(m.chat, `Silahkan Jawab Pertanyaan Berikut\n\n${result.soal}\nWaktu : ${(120000 / 1000).toFixed(2)} detik\n\n_Ketik .nyerah Untuk Menyerah..._\n_Ketik .bantuan Untuk Petunjuk..._`, m), result, 250,
 						setTimeout(() => {
@@ -3595,9 +3596,9 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store = null) => {
 				if (gamecek) return newReply('Masih ada sesi yang belum selesai!');
 				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
 				try {
-					let anu = await fetchJson('https://raw.githubusercontent.com/BochilTeam/database/master/games/susunkata.json')
-					let result = await pickRandom(anu)
-					console.log("Jawaban: " + result.jawaban)
+					let result = await fetchAndPick('https://raw.githubusercontent.com/BochilTeam/database/master/games/susunkata.json');
+					if (!result) return newReply('*Gagal memuat database permainan (kosong).* ☹️');
+					console.log("Jawaban: " + (result.jawaban || result.soal || 'unknown'))
 					susunkata[m.chat] = [
 						await sock.sendText(m.chat, `*Jawablah Pertanyaan Berikut :*\nSoal : ${result.soal}\nTipe : ${result.tipe}\nWaktu : ${(120000 / 1000).toFixed(2)} detik\n\n_Ketik .nyerah Untuk Menyerah..._\n_Ketik .bantuan Untuk Petunjuk..._`, m), result, 250,
 						setTimeout(() => {
@@ -3619,9 +3620,9 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store = null) => {
 				if (gamecek) return newReply('Masih ada sesi yang belum selesai!');
 				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
 				try {
-					let anu = await fetchJson('https://raw.githubusercontent.com/BochilTeam/database/master/games/caklontong.json')
-					let result = await pickRandom(anu)
-					console.log("Jawaban: " + result.jawaban)
+					let result = await fetchAndPick('https://raw.githubusercontent.com/BochilTeam/database/master/games/caklontong.json');
+					if (!result) return newReply('*Gagal memuat database permainan (kosong).* ☹️');
+					console.log("Jawaban: " + (result.jawaban || result.soal || 'unknown'))
 					caklontong[m.chat] = [
 						await sock.sendText(m.chat, `*Jawablah Pertanyaan Berikut :*\nSoal : ${result.soal}\nWaktu : ${(120000 / 1000).toFixed(2)} detik\n\n_Ketik .nyerah Untuk Menyerah..._\n_Ketik .bantuan Untuk Petunjuk..._`, m), result, 250,
 						setTimeout(() => {
@@ -3643,9 +3644,9 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store = null) => {
 				if (gamecek) return newReply('Masih ada sesi yang belum selesai!');
 				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
 				try {
-					let anu = await fetchJson('https://raw.githubusercontent.com/BochilTeam/database/master/games/tekateki.json')
-					let result = await pickRandom(anu)
-					console.log("Jawaban: " + result.jawaban)
+					let result = await fetchAndPick('https://raw.githubusercontent.com/BochilTeam/database/master/games/tekateki.json');
+					if (!result) return newReply('*Gagal memuat database permainan (kosong).* ☹️');
+					console.log("Jawaban: " + (result.jawaban || result.soal || 'unknown'))
 					tekateki[m.chat] = [
 						await sock.sendText(m.chat, `Silahkan Jawab Pertanyaan Berikut\n\n${result.soal}\nWaktu : ${(120000 / 1000).toFixed(2)} detik\n\n_Ketik .nyerah Untuk Menyerah..._\n_Ketik .bantuan Untuk Petunjuk..._`, m), result, 250,
 						setTimeout(() => {
