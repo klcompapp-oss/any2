@@ -17,7 +17,7 @@ const {
     jidDecode,
     proto,
     delay
-} = require("@whiskeysockets/baileys"); // Tambahkan @whiskeysockets/
+} = require("baileys");
 const { color } = require('./lib/color');
 const readline = require("readline");
 const NodeCache = require("node-cache");
