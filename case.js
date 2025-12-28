@@ -1,31 +1,5 @@
-				try {
-					let anu = await fetchJson('https://raw.githubusercontent.com/BochilTeam/database/master/games/tebakkata.json');
-					let dataArr = Array.isArray(anu) ? anu : (anu && typeof anu === 'object') ? Object.values(anu) : [];
-					if (!dataArr || dataArr.length === 0) {
-						console.log('Empty tebakkata database', anu);
-						return newReply('*Gagal memuat database permainan (kosong).* ☹️');
-					}
-					let result = pickRandom(dataArr);
-					if (!result || !result.jawaban) {
-						console.log('Invalid tebakkata result', result);
-						return newReply('*Data permainan tidak valid. Coba lagi nanti.* ☹️');
-					}
-					console.log("Jawaban: " + result.jawaban);
-					tebakkata[m.chat] = [
-						await sock.sendText(m.chat, `Silahkan Jawab Pertanyaan Berikut\n\n${result.soal}\nWaktu : ${(120000 / 1000).toFixed(2)} detik\n\n_Ketik .nyerah Untuk Menyerah..._\n_Ketik .bantuan Untuk Petunjuk..._`, m),
-						result,
-						250,
-						setTimeout(() => {
-							if (tebakkata[m.chat]) {
-								waktuHabis(result.jawaban);
-								delete tebakkata[m.chat];
-							}
-						}, 120000)
-					];
-				} catch (error) {
-					console.log(error);
-					newReply('*Gagal memuat database dari server*. ☹️');
-				};
+
+const {
 	WA_DEFAULT_EPHEMERAL,
 	generateWAMessageFromContent,
 	proto,
