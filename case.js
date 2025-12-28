@@ -1,4 +1,5 @@
 
+require('./lib/menu');
 const {
 	WA_DEFAULT_EPHEMERAL,
 	generateWAMessageFromContent,
