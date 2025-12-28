@@ -4844,8 +4844,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store = null) => {
 				let getGroups = await sock.groupFetchAllParticipating();
 				let groups = Object.entries(getGroups).map(e => e[1]);
 				if (!groups || groups.length === 0) return newReply('Bot tidak berada di grup manapun.');
-				let teks = '*📋 Daftar Grup yang Bot Masuk:*
-' + '\n\n';
+				let teks = '*📋 Daftar Grup yang Bot Masuk:*\n\n';
 				let ids = [];
 				for (let i = 0; i < groups.length; i++) {
 					const g = groups[i];
