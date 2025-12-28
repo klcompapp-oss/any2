@@ -13,17 +13,17 @@
 const fs = require('fs');
 const chalk = require('chalk');
 
-global.botName = 'ᴋᴀʏᴀɴᴀ - ᴍᴅ'; // Nama Bot Kamu
+global.botName = 'GoodBot'; // Nama Bot Kamu
 global.ownerNumber = '6285858850541'; // Nomor Kamu
 global.ownerName = 'Felaa'; // Nama Kamu
 global.website = '-'; // Web Kamu
 global.wagc = 'https://whatsapp.com/channel/0029VbAi39lKmCPPAoKa8v15'; // Web Kamu
 
-global.packname = botName; // Nama Pack
-global.author = ownerName; // Nama Author
+global.packname = Goodbot; // Nama Pack
+global.author = Felas; // Nama Author
 global.footer = '© Felaa';
-global.creator = '6281234259676@s.whatsapp.net'; // Nomor Creator
-global.premium = ['6281234259676']; // User Premium
+global.creator = '6285858850541@s.whatsapp.net'; // Nomor Creator
+global.premium = ['6285858850541']; // User Premium
 global.prefa = '/'; // Prefix
 global.tempatDB = 'database.json'; // Tempat Database
 
@@ -56,12 +56,12 @@ global.onlyRegister = false // Hanya Pendaftar
 global.autoJoinNewsletter = true // 
 
 global.payment = {
-	dana: "085813708397",
-	gopay: "085813708397",
-	ovo: "085813708397",
-	qris: "https://files.catbox.moe/cjge9u.jpg",
-	shopeePay: "085813708397",
-	seabank: "085813708397"
+	dana: "-",
+	gopay: "-",
+	ovo: "-",
+	qris: "-",
+	shopeePay: "-",
+	seabank: "-"
 };
 
 global.limit = {
@@ -78,7 +78,7 @@ global.uang = {
 
 global.bot = {
 	limit: 0, // Limit Awal Bot
-	uang: 0 // Uang Awal Bot
+	uang: 100 // Uang Awal Bot
 };
 
 global.game = {
@@ -103,7 +103,7 @@ global.mess = {
 	wait: "Tunggu sebentar ya, Kak... aku lagi proses nih! ⏳🤗"
 };
 
-global.imageDonasi = "https://files.catbox.moe/e0z9h8.jpg"; // Url Image Donasi (dana, qris etc..)
+global.imageDonasi = "-"; // Url Image Donasi (dana, qris etc..)
 global.imageUrl = "https://files.catbox.moe/yma6vh.jpg"; // Url Image
 global.imageBuffer = fs.readFileSync("./media/imageBuffer.png"); // Buffer Image
 global.videoBuffer = fs.readFileSync("./media/videoBuffer.mp4"); // Buffer Video
