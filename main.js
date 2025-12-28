@@ -554,9 +554,19 @@ async function startHaruka() {
 			mek.message = (Object.keys(mek.message)[0] === 'ephemeralMessage') ? mek.message.ephemeralMessage.message : mek.message
 			if (mek.key && mek.key.remoteJid === 'status@broadcast') return
 			m = smsg(sock, mek, store)
+			
+			// Log incoming message
+			const logMsg = `[${new Date().toLocaleString('id-ID')}] FROM: ${m.sender || 'unknown'} | CHAT: ${m.chat || 'unknown'} | TEXT: ${m.text.substring(0, 50) || m.type || 'N/A'}`;
+			console.log(chalk.cyan(logMsg));
+			
 			require("./case")(sock, m, chatUpdate, mek, null)
 		} catch (err) {
-			console.log(chalk.yellow.bold("[ ERROR ] case.js :\n") + chalk.redBright(util.format(err)))
+			const errorLog = `[${new Date().toLocaleString('id-ID')}] ERROR: ${err.message || err}\nStack: ${err.stack}`;
+			console.log(chalk.yellow.bold("[ ERROR ] case.js :\n") + chalk.redBright(util.format(err)));
+			
+			// Append error ke file
+			if (fs.existsSync('./logs') === false) fs.mkdirSync('./logs');
+			fs.appendFileSync('./logs/error.log', `\n${errorLog}`);
 		}
 	})
 

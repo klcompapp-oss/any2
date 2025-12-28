@@ -4,7 +4,7 @@
  ᴊᴇɴɪs sᴄʀɪᴘᴛ : ᴋᴀʏᴀɴᴀ || ᴍᴅ
  ᴠᴇʀsɪᴏɴ : 2.0 ᴜᴘᴅᴀᴛᴇ
  
- ᴄʀᴇᴀᴛᴇᴅ ʙʏ : ʙᴀʏʏ ᴏғғᴄ
+ ᴄʀᴇᴀᴛᴇᴅ ʙʏ : Felaa
  ʙᴀsᴇ sᴄʀɪᴘᴛ  ᴏʀɪ :
  -  ʀɪᴢᴀʟ-ᴅᴇᴠ
  - ғᴀʟʟxᴅ ( ᴄʀᴇᴀᴛᴇᴅ ᴍᴀᴏᴄʜᴀɴ ᴍᴅ  ) 
@@ -14,14 +14,14 @@ const fs = require('fs');
 const chalk = require('chalk');
 
 global.botName = 'ᴋᴀʏᴀɴᴀ - ᴍᴅ'; // Nama Bot Kamu
-global.ownerNumber = '6282240371094'; // Nomor Kamu
-global.ownerName = 'ʙᴀʏʏ ᴏғғᴄ'; // Nama Kamu
-global.website = 'https://whatsapp.com/channel/0029VbAi39lKmCPPAoKa8v15'; // Web Kamu
+global.ownerNumber = '6285858850541'; // Nomor Kamu
+global.ownerName = 'Felaa'; // Nama Kamu
+global.website = '-'; // Web Kamu
 global.wagc = 'https://whatsapp.com/channel/0029VbAi39lKmCPPAoKa8v15'; // Web Kamu
 
 global.packname = botName; // Nama Pack
 global.author = ownerName; // Nama Author
-global.footer = '© ʙᴀʏʏ ᴏғғᴄ';
+global.footer = '© Felaa';
 global.creator = '6281234259676@s.whatsapp.net'; // Nomor Creator
 global.premium = ['6281234259676']; // User Premium
 global.prefa = '/'; // Prefix

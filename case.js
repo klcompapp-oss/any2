@@ -322,6 +322,21 @@ async function checkBandwidth() {
 	};
 };
 
+// Logging helper functions
+const logCommand = (cmd, sender, text, status = 'EXEC') => {
+	const log = `[${new Date().toLocaleString('id-ID')}] ${status} | CMD: ${cmd} | USER: ${sender} | TEXT: ${text ? text.substring(0, 40) : 'N/A'}`;
+	console.log(chalk.blue(log));
+	if (!fs.existsSync('./logs')) fs.mkdirSync('./logs');
+	fs.appendFileSync('./logs/command.log', `\n${log}`);
+};
+
+const logError = (cmd, sender, err) => {
+	const errorLog = `[${new Date().toLocaleString('id-ID')}] ERROR | CMD: ${cmd} | USER: ${sender} | ERROR: ${err.message} | STACK: ${err.stack}`;
+	console.error(chalk.red(errorLog));
+	if (!fs.existsSync('./logs')) fs.mkdirSync('./logs');
+	fs.appendFileSync('./logs/error.log', `\n${errorLog}`);
+};
+
 module.exports = sock = async (sock, m, msg, chatUpdate, store = null) => {
 	try {
 		const {
@@ -338,6 +353,9 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store = null) => {
 		const isCommand = isCmd ? body.slice(1).trim().split(' ').shift().toLowerCase() : ""
 		const command = isCmd ? body.slice(1).trim().split(' ').shift().toLowerCase() : ''
 		const args = body.trim().split(/ +/).slice(1);
+		
+		// Log command execution
+		if (isCmd) logCommand(command, m.sender, body);
 		const botNumber = await sock.decodeJid(sock.user.id);
 		const pushname = m.pushName || "No Name"
 		const text = q = args.join(" ");
@@ -6899,6 +6917,7 @@ break;
 				try {
 					const buffer = await getBuffer(`https://brat.caliphdev.com/api/brat?text=${encodeURIComponent(text)}`);
 					if (!Buffer.isBuffer(buffer) || Buffer.byteLength(buffer) < 100) {
+						logError('bratgambar', m.sender, new Error('Invalid buffer from brat API'));
 						newReply('Gagal mengambil gambar dari layanan brat. Coba lagi nanti.');
 						delete enhance[m.sender];
 						db.data.users[m.sender].limit -= 1;
@@ -6907,10 +6926,13 @@ break;
 					await m.react('✅');
 					try {
 						await sock.sendImageAsSticker(m.chat, buffer, m, { packname: botName, author: ownerName });
+						logCommand('bratgambar', m.sender, text, 'SUCCESS');
 					} catch (errSticker) {
+						logError('bratgambar', m.sender, errSticker);
 						newReply('Gagal membuat stiker dari gambar yang diterima.');
 					}
 				} catch (err) {
+					logError('bratgambar', m.sender, err);
 					newReply('Terjadi kesalahan saat membuat stiker gambar. 😞');
 				}
 				delete enhance[m.sender];
@@ -15018,6 +15040,8 @@ ${otherMenu(prefix)}`;
 			}
 		}
 	} catch (err) {
+		const cmdName = command || 'unknown';
+		logError(cmdName, m.sender, err);
 		console.log(chalk.yellow.bold("[ ERROR ] case.js :\n") + chalk.redBright(util.format(err)));
 	}
 };
