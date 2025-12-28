@@ -337,6 +337,7 @@ const logError = (cmd, sender, err) => {
 };
 
 module.exports = sock = async (sock, m, msg, chatUpdate, store = null) => {
+	let command = '';
 	try {
 		const {
 			type,
@@ -350,7 +351,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store = null) => {
 		const prefix = /^[°•π÷×¶∆£¢€¥®™✓_=|~!?#$%^&.+-,\/\\©^]/.test(body) ? body.match(/^[°•π÷×¶∆£¢€¥®™✓_=|~!?#$%^&.+-,\/\\©^]/gi) : prefa
 		const isCmd = body.startsWith(prefix)
 		const isCommand = isCmd ? body.slice(1).trim().split(' ').shift().toLowerCase() : ""
-		const command = isCmd ? body.slice(1).trim().split(' ').shift().toLowerCase() : ''
+		command = isCmd ? body.slice(1).trim().split(' ').shift().toLowerCase() : ''
 		const args = body.trim().split(/ +/).slice(1);
 		
 		// Log command execution
