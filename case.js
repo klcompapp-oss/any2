@@ -6898,8 +6898,18 @@ break;
 				await m.react('⏱️');
 				try {
 					const buffer = await getBuffer(`https://brat.caliphdev.com/api/brat?text=${encodeURIComponent(text)}`);
+					if (!Buffer.isBuffer(buffer) || Buffer.byteLength(buffer) < 100) {
+						newReply('Gagal mengambil gambar dari layanan brat. Coba lagi nanti.');
+						delete enhance[m.sender];
+						db.data.users[m.sender].limit -= 1;
+						break;
+					}
 					await m.react('✅');
-					sock.sendImageAsSticker(m.chat, buffer, m, { packname: botName, author: ownerName });
+					try {
+						await sock.sendImageAsSticker(m.chat, buffer, m, { packname: botName, author: ownerName });
+					} catch (errSticker) {
+						newReply('Gagal membuat stiker dari gambar yang diterima.');
+					}
 				} catch (err) {
 					newReply('Terjadi kesalahan saat membuat stiker gambar. 😞');
 				}
