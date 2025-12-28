@@ -14997,16 +14997,16 @@ ${otherMenu(prefix)}`;
 				if (!isCreator) return m.react('⚠️');
 				if (isBot) return m.react('⚠️');
 				await m.react('⏱️');
-				function Return(sul) {
-					sat = JSON.stringify(sul, null, 2)
-					bang = util.format(sat)
-					if (sat == undefined) {
-						bang = util.format(sul)
+				try {
+					function Return(sul) {
+						sat = JSON.stringify(sul, null, 2)
+						bang = util.format(sat)
+						if (sat == undefined) {
+							bang = util.format(sul)
+						}
+						m.react('✅');
+						return newReply(bang)
 					}
-					m.react('✅');
-					return newReply(bang)
-				}
-					if (!isCreator) return m.react('⚠️');
 					newReply(util.format(eval(`(async () => { return ${budy.slice(3)} })()`)))
 				} catch (e) {
 					newReply(String(e))
