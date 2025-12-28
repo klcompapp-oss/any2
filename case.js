@@ -9760,6 +9760,18 @@ break;
 				break;
 			}
 
+			case 'ceksange': {
+				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
+				const percentage = Math.floor(Math.random() * 100) + 1;
+				const komentar = percentage > 80 ? '😱 Wow! Kamu ini sangat sange, hati-hati!' : 
+					percentage > 50 ? '🔥 Cukup sange sih, perlu diatur nih!' :
+					'😅 Masih normal deh, santai aja!';
+				newReply(`🌶️ *Cek Sange*\n\nLevel sangenya Kamu ada di angka *${percentage}%*\n${komentar}`);
+				db.data.users[m.sender].limit -= 1;
+				logCommand('ceksange', m.sender, '', 'SUCCESS');
+				break;
+			}
+
 			case 'cekwaifu': {
 				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
 				if (!quoted) return newReply(`Kirim/Reply Gambar Waifu Kamu Dengan Caption *${prefix + command}*`);
