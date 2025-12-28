@@ -394,6 +394,14 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store = null) => {
 		// normalize bot id and group admin ids to canonical form for comparison
 		const normalizedBot = (botNumber && typeof botNumber === 'string') ? (botNumber.includes(':') ? botNumber.split(':')[0] + '@s.whatsapp.net' : (botNumber.includes('@') ? botNumber : botNumber + '@s.whatsapp.net')) : botNumber;
 		const isBotAdmins = m.isGroup ? groupAdmins.includes(normalizedBot) : false
+		// debug logs to help diagnose admin detection issues
+		if (process.env.DEBUG_BOT_ADMIN === '1') {
+			console.log('DEBUG BOT ADMIN: botNumberRaw=', botNumberRaw);
+			console.log('DEBUG BOT ADMIN: botNumber=', botNumber);
+			console.log('DEBUG BOT ADMIN: normalizedBot=', normalizedBot);
+			console.log('DEBUG BOT ADMIN: groupAdmins=', JSON.stringify(groupAdmins));
+			console.log('DEBUG BOT ADMIN: isBotAdmins=', isBotAdmins);
+		}
 		const isAdmins = isGroupAdmins
 		const isBan = banned.includes(m.sender);
 		const groupOwner = m.isGroup ? groupMetadata.owner : ''
