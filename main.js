@@ -17,7 +17,7 @@ const {
     jidDecode,
     proto,
     delay
-} = require("baileys");
+} = require("@whiskeysockets/baileys"); // Tambahkan @whiskeysockets/
 const { color } = require('./lib/color');
 const readline = require("readline");
 const NodeCache = require("node-cache");
@@ -71,13 +71,14 @@ const {
 	toNumber 
 } = require('./lib/myfunc');
 
-const store = makeInMemoryStore({
-	logger: pino().child({
+const makeInMemoryStore = require("baileys").makeInMemoryStore || (() => ({}));
+	logger: pino({
+		level: 'silent'
+	}).child({
 		level: 'silent',
 		stream: 'store'
 	})
 });
-
 global.opts = new Object(yargs(process.argv.slice(2)).exitProcess(false).parse());
 
 global.db = new Low(new JSONFile(`src/${tempatDB}`));
