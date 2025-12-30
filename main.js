@@ -25,34 +25,79 @@ try {
 // Normalize for packages that export via `default` (ESM -> CJS interop)
 const baileys = (_baileysRequire && _baileysRequire.default) ? _baileysRequire.default : _baileysRequire;
 
-// Verify critical functions exist
-if (!baileys.makeWASocket) {
-	console.error('❌ ERROR: makeWASocket not found in Baileys. Available exports:', Object.keys(baileys).slice(0, 10));
-	throw new Error('Baileys fork mismatch: critical functions missing. Try: npm install @adiwajshing/baileys@latest');
+// Robust resolution and diagnostics for Baileys exports
+function tryFindExport(name) {
+	// try multiple candidate locations
+	const candidates = [
+		_baileysRequire,
+		_baileysRequire && _baileysRequire.default,
+		baileys
+	];
+	for (const c of candidates) {
+		try {
+			if (!c) continue;
+			if (typeof c[name] !== 'undefined') return c[name];
+		} catch (e) {
+			// ignore
+		}
+	}
+	return undefined;
 }
 
-const { 
-	makeWASocket,
-	makeCacheableSignalKeyStore,
-	useMultiFileAuthState,
-	DisconnectReason,
-	fetchLatestBaileysVersion,
-	generateForwardMessageContent,
-	generateWAMessage,
-	prepareWAMessageMedia,
-	generateWAMessageFromContent,
-	generateMessageID,
-	downloadContentFromMessage,
-	makeInMemoryStore,
-	jidDecode,
-	proto,
-	delay
-} = baileys || {};
+function dumpBaileysDebug() {
+	try {
+		console.error('--- Baileys debug ---');
+		console.error('require(...) typeof:', typeof _baileysRequire);
+		try { console.error('require keys:', Object.keys(_baileysRequire || {})); } catch (e) { console.error('require keys: <unprintable>'); }
+		console.error('normalized baileys typeof:', typeof baileys);
+		try { console.error('normalized keys:', Object.keys(baileys || {})); } catch (e) { console.error('normalized keys: <unprintable>'); }
+		if (_baileysRequire && _baileysRequire.default) {
+			try { console.error('default keys:', Object.keys(_baileysRequire.default || {})); } catch (e) { }
+		}
+		// try to print package version if available
+		try {
+			const pkg = require('@whiskeysockets/baileys/package.json');
+			console.error('@whiskeysockets/baileys version:', pkg.version);
+		} catch (e) {
+			try {
+				const pkg2 = require('@adiwajshing/baileys/package.json');
+				console.error('@adiwajshing/baileys version:', pkg2.version);
+			} catch (e2) {
+				// ignore
+			}
+		}
+		console.error('--- end debug ---');
+	} catch (e) {
+		console.error('failed to dump baileys debug info', e);
+	}
+}
+
+// Try to resolve required functions from any export location
+const makeWASocket = tryFindExport('makeWASocket');
+const makeCacheableSignalKeyStore = tryFindExport('makeCacheableSignalKeyStore');
+const useMultiFileAuthState = tryFindExport('useMultiFileAuthState');
+const DisconnectReason = tryFindExport('DisconnectReason');
+const fetchLatestBaileysVersion = tryFindExport('fetchLatestBaileysVersion');
+const generateForwardMessageContent = tryFindExport('generateForwardMessageContent');
+const generateWAMessage = tryFindExport('generateWAMessage');
+const prepareWAMessageMedia = tryFindExport('prepareWAMessageMedia');
+const generateWAMessageFromContent = tryFindExport('generateWAMessageFromContent');
+const generateMessageID = tryFindExport('generateMessageID');
+const downloadContentFromMessage = tryFindExport('downloadContentFromMessage');
+const makeInMemoryStore = tryFindExport('makeInMemoryStore');
+const jidDecode = tryFindExport('jidDecode');
+const proto = tryFindExport('proto');
+const delay = tryFindExport('delay');
 
 // Provide helpful errors if critical functions are missing
-if (typeof makeWASocket !== 'function') throw new Error('makeWASocket missing from Baileys export');
-if (typeof useMultiFileAuthState !== 'function') throw new Error('useMultiFileAuthState missing from Baileys export');
-if (typeof DisconnectReason === 'undefined') throw new Error('DisconnectReason missing from Baileys export');
+if (typeof makeWASocket !== 'function' || typeof useMultiFileAuthState !== 'function' || typeof DisconnectReason === 'undefined') {
+	dumpBaileysDebug();
+	console.error('❌ ERROR: makeWASocket not found in Baileys. Available exports (normalized keys):', Object.keys(baileys || {}).slice(0, 30));
+	console.error('Suggestion: run the following in the same shell where you run `npm start` to diagnose:');
+	console.error('  npm ls @whiskeysockets/baileys @adiwajshing/baileys lily-baileys');
+	console.error('  node -e "const b=require(\'@whiskeysockets/baileys\'); console.log(typeof b, Object.keys(b||{})); if(b&&b.default) console.log(Object.keys(b.default||{}));"');
+	throw new Error('Baileys fork mismatch: critical functions missing. Try reinstalling a compatible Baileys package (e.g. npm i @whiskeysockets/baileys@latest jimp@1.6.0 --legacy-peer-deps)');
+}
 const { color } = require('./lib/color');
 const readline = require("readline");
 const NodeCache = require("node-cache");
