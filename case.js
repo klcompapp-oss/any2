@@ -385,7 +385,54 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store = null) => {
 		const isQuotedDocument = type === 'extendedTextMessage' && content.includes('documentMessage');
 
 		const isGroup = m.key.remoteJid.endsWith('@g.us');
-		const groupMetadata = m.isGroup ? await sock.groupMetadata(m.chat).catch(e => null) : null
+
+		// Safe wrapper for groupMetadata to handle rate limits and transient errors
+		async function safeGroupMetadata(jid, { retries = 4, baseDelay = 1000 } = {}) {
+			for (let i = 0; i < retries; i++) {
+				try {
+					return await sock.groupMetadata(jid);
+				} catch (err) {
+					// Detect Baileys rate limit error or 429 responses
+					const msg = err && (err.message || (err.output && err.output.payload && err.output.payload.message));
+					if (msg && (String(msg).toLowerCase().includes('rate-overlimit') || String(msg).includes('429'))) {
+						const wait = baseDelay * Math.pow(2, i);
+						console.warn(`safeGroupMetadata: rate limited, retrying in ${wait}ms... (attempt ${i + 1})`);
+						await sleep(wait);
+						continue;
+					}
+					// For other errors, log and return null to avoid crashing the bot
+					console.error('safeGroupMetadata error:', err && (err.stack || err));
+					return null;
+				}
+			}
+			console.warn('safeGroupMetadata: exceeded retries for', jid);
+			return null;
+		}
+
+		const groupMetadata = m.isGroup ? await safeGroupMetadata(m.chat) : null
+
+		// Safe download wrapper to handle transient network/DNS errors (EAI_AGAIN, fetch failed)
+		async function safeDownloadAndSaveMediaMessage(message, { retries = 4, baseDelay = 1000 } = {}) {
+			for (let i = 0; i < retries; i++) {
+				try {
+					return await sock.downloadAndSaveMediaMessage(message);
+				} catch (err) {
+					const msg = err && (err.message || (err.output && err.output.payload && err.output.payload.message));
+					// transient network/DNS errors often contain EAI_AGAIN or 'fetch failed'
+					if (msg && (String(msg).includes('EAI_AGAIN') || String(msg).toLowerCase().includes('fetch failed') || String(msg).toLowerCase().includes('getaddrinfo'))) {
+						const wait = baseDelay * Math.pow(2, i);
+						console.warn(`safeDownload: transient error (${msg}), retrying in ${wait}ms... (attempt ${i + 1})`);
+						await sleep(wait);
+						continue;
+					}
+					console.error('safeDownload error:', err && (err.stack || err));
+					throw err; // non-transient -> rethrow so caller can handle
+				}
+			}
+			console.warn('safeDownload: exceeded retries');
+			// final attempt
+			return await sock.downloadAndSaveMediaMessage(message);
+		}
 		const groupName = m.isGroup && groupMetadata ? groupMetadata.subject : ''
 		const participants = m.isGroup && groupMetadata ? groupMetadata.participants : []
 		const groupAdminsRaw = m.isGroup ? getGroupAdmins(participants) : []
@@ -412,7 +459,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store = null) => {
 		const AntiNsfw = m.isGroup ? ntnsfw.includes(m.chat) : false
 
 		if (m.isGroup) {
-			m.metadata = await sock.groupMetadata(m.chat)
+			m.metadata = await safeGroupMetadata(m.chat)
 			m.admins = (m.metadata.participants.reduce((a, b) => (b.admin ? a.push({ id: b.id, admin: b.admin }) : [...a]) && a, []))
 			m.isAdmin = m.admins.some((b) => b.id === m.sender)
 			m.participant = m.key.participant
@@ -4204,7 +4251,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store = null) => {
 				listSewa += `📌 *Total Grup:* ${sewa.length}\n\n`;
 
 				for (let x of sewa) {
-					let groupMetadata = await sock.groupMetadata(x.id);
+					let groupMetadata = await safeGroupMetadata(x.id);
 					listSewa += `📍 *Nama:* ${groupMetadata.subject}\n`;
 					listSewa += `🔗 *ID:* ${x.id}\n`;
 		
@@ -5704,7 +5751,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store = null) => {
 						vcard: "BEGIN:VCARD\nVERSION:3.0\nN:;" + name + ";;;\nFN:" + name + "\nitem1.TEL;waid=" + m.sender.split('@')[0] + ":" + m.sender.split('@')[0] + "\nitem1.X-ABLabel:Ponsel\nEND:VCARD"
 					}]
 				}
-				let push = await sock.groupMetadata(m.chat)
+				let push = await safeGroupMetadata(m.chat)
 				if (push.participants.length > 901) return newReply('Batas member maksimal: *900*')
 				await m.react('⏱️');
 				for (let a of push.participants) {
@@ -5727,7 +5774,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store = null) => {
 				let groups = Object.entries(getGroups).map((entry) => entry[1]);
 				let anu = groups.map((v) => v.id);
 				for (let xnxx of anu) {
-					let metadata = await sock.groupMetadata(xnxx);
+					let metadata = await safeGroupMetadata(xnxx);
 					let participants = metadata.participants;
 					if (/image/.test(mime)) {
 						let media = await sock.downloadAndSaveMediaMessage(quoted);
@@ -5767,7 +5814,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store = null) => {
 				if (!isCreator && !isSuperAdmin) return newReply(mess.owner);
 				if (!text) return newReply(`⚙️ *Penggunaan yang benar:*\n${prefix + command} idgc|teks`);
 				try {
-					const metadata = await sock.groupMetadata(text.split("|")[0]);
+					const metadata = await safeGroupMetadata(text.split("|")[0]);
 					const participants = metadata.participants;
 					for (let mem of participants) {
 						await sock.sendMessage(
@@ -5828,7 +5875,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store = null) => {
 			case 'savecontact': case 'svcontact': {
 				if (!m.isGroup) return newReply(mess.group); // Hanya untuk grup
 				if (!(m.isAdmin || isCreator || isSuperAdmin)) return newReply(mess.owner); // Hanya admin atau pemilik yang bisa
-				let cmiggc = await sock.groupMetadata(m.chat);
+				let cmiggc = await safeGroupMetadata(m.chat);
 				let orgiggc = participants.map(a => a.id);
 				vcard = '';
 				noPort = 0;
@@ -5934,7 +5981,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store = null) => {
 					ntnsfw.push(m.chat);
 					fs.writeFileSync('./src/data/function/nsfw.json', JSON.stringify(ntnsfw));
 					newReply('Fitur NSFW berhasil diaktifkan di grup ini!');
-					let groupInfo = await sock.groupMetadata(m.chat);
+					let groupInfo = await safeGroupMetadata(m.chat);
 					let members = groupInfo['participants'].map(member => member.id.replace('c.us', 's.whatsapp.net'));
 					let warningText = '*「 ⚠️ DANGER ⚠️ 」*\n\n';
 					warningText += 'Fitur NSFW telah diaktifkan di grup ini!\n';
@@ -6692,7 +6739,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store = null) => {
 				let anu = await store.chats.all().filter(v => v.id.endsWith('@g.us')).map(v => v.id);
 				let teks = `⬣ *LIST GROUP CHAT*\n\nTotal Group : ${anu.length} Group\n\n`;
 				for (let i of anu) {
-					let metadata = await sock.groupMetadata(i);
+					let metadata = await safeGroupMetadata(i);
 					teks += `*Name*: ${metadata.subject}\n`;
 					teks += `*Admin*: ${metadata.owner ? `@${metadata.owner.split('@')[0]}` : '-' }\n`;
 					teks += `*ID*: ${metadata.id}\n`;
@@ -7301,20 +7348,25 @@ break;
 			}
 
 			case 's': case 'sticker': case 'stiker': {
-				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(`Aduh, kak, limitmu habis! 🥲 Coba upgrade jadi premium ya!`);
-				if (!quoted) return newReply(`Kirim atau balas gambar/video/gif dengan caption ${prefix + command}\nDurasi video 1-9 detik ya!`);
-				if (!mime) return newReply(`Kirim atau balas gambar/video/gif dengan caption ${prefix + command}\nDurasi video 1-9 detik ya!`);
-				if (/image/.test(mime)) {
-					await m.react('⏱️');
-					let media = await sock.downloadAndSaveMediaMessage(quoted);
-					await sock.sendImageAsSticker(m.chat, media, m, { packname: global.packname, author: global.author });
-				} else if (/video/.test(mime)) {
-					if ((quoted.msg || quoted).seconds > 9) return newReply(`Durasi video terlalu panjang! 🕒 Kirim video dengan durasi 1-9 detik ya!`);
-					await m.react('⏱️');
-					let media = await sock.downloadAndSaveMediaMessage(quoted);
-					await sock.sendVideoAsSticker(m.chat, media, m, { packname: global.packname, author: global.author });
-				} else {
-					newReply(`Kirim atau balas gambar/video/gif dengan caption ${prefix + command}\nDurasi video 1-9 detik ya!`);
+				try {
+					if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(`Aduh, kak, limitmu habis! 🥲 Coba upgrade jadi premium ya!`);
+					if (!quoted) return newReply(`Kirim atau balas gambar/video/gif dengan caption ${prefix + command}\nDurasi video 1-9 detik ya!`);
+					if (!mime) return newReply(`Kirim atau balas gambar/video/gif dengan caption ${prefix + command}\nDurasi video 1-9 detik ya!`);
+					if (/image/.test(mime)) {
+						await m.react('⏱️');
+						let media = await safeDownloadAndSaveMediaMessage(quoted);
+						await sock.sendImageAsSticker(m.chat, media, m, { packname: global.packname, author: global.author });
+					} else if (/video/.test(mime)) {
+						if ((quoted.msg || quoted).seconds > 9) return newReply(`Durasi video terlalu panjang! 🕒 Kirim video dengan durasi 1-9 detik ya!`);
+						await m.react('⏱️');
+						let media = await safeDownloadAndSaveMediaMessage(quoted);
+						await sock.sendVideoAsSticker(m.chat, media, m, { packname: global.packname, author: global.author });
+					} else {
+						newReply(`Kirim atau balas gambar/video/gif dengan caption ${prefix + command}\nDurasi video 1-9 detik ya!`);
+					}
+				} catch (err) {
+					console.error('sticker command error:', err && (err.stack || err));
+					newReply('❌ Gagal membuat sticker karena masalah jaringan atau server. Coba ulang beberapa detik lagi.');
 				}
 			}
 			db.data.users[m.sender].limit -= 1;
