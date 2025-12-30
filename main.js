@@ -3,16 +3,21 @@ process.on("uncaughtException", console.error);
 require('./settings');
 let _baileysRequire;
 try {
-	// prefer the official scoped package if available
-	_baileysRequire = require('@adiwajshing/baileys');
-} catch (e1) {
+	// prefer the whiskeysockets (maintained fork)
+	_baileysRequire = require('@whiskeysockets/baileys');
+} catch (e0) {
 	try {
-		_baileysRequire = require('baileys');
-	} catch (e2) {
+		// fall back to official
+		_baileysRequire = require('@adiwajshing/baileys');
+	} catch (e1) {
 		try {
-			_baileysRequire = require('lily-baileys');
-		} catch (e3) {
-			throw new Error("Missing Baileys dependency: install '@adiwajshing/baileys' or 'lily-baileys' (npm install)");
+			_baileysRequire = require('baileys');
+		} catch (e2) {
+			try {
+				_baileysRequire = require('lily-baileys');
+			} catch (e3) {
+				throw new Error("Missing Baileys dependency: install '@whiskeysockets/baileys' (npm install) or '@adiwajshing/baileys'");
+			}
 		}
 	}
 }
