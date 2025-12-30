@@ -16,6 +16,10 @@ try {
 		}
 	}
 }
+
+// Normalize for packages that export via `default` (ESM -> CJS interop)
+const baileys = (_baileysRequire && _baileysRequire.default) ? _baileysRequire.default : _baileysRequire;
+
 const { 
 	makeWASocket,
 	makeCacheableSignalKeyStore,
@@ -32,7 +36,7 @@ const {
 	jidDecode,
 	proto,
 	delay
-} = _baileysRequire;
+} = baileys;
 const { color } = require('./lib/color');
 const readline = require("readline");
 const NodeCache = require("node-cache");
