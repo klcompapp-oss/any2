@@ -20,6 +20,12 @@ try {
 // Normalize for packages that export via `default` (ESM -> CJS interop)
 const baileys = (_baileysRequire && _baileysRequire.default) ? _baileysRequire.default : _baileysRequire;
 
+// Verify critical functions exist
+if (!baileys.makeWASocket) {
+	console.error('❌ ERROR: makeWASocket not found in Baileys. Available exports:', Object.keys(baileys).slice(0, 10));
+	throw new Error('Baileys fork mismatch: critical functions missing. Try: npm install @adiwajshing/baileys@latest');
+}
+
 const { 
 	makeWASocket,
 	makeCacheableSignalKeyStore,
@@ -36,7 +42,12 @@ const {
 	jidDecode,
 	proto,
 	delay
-} = baileys;
+} = baileys || {};
+
+// Provide helpful errors if critical functions are missing
+if (typeof makeWASocket !== 'function') throw new Error('makeWASocket missing from Baileys export');
+if (typeof useMultiFileAuthState !== 'function') throw new Error('useMultiFileAuthState missing from Baileys export');
+if (typeof DisconnectReason === 'undefined') throw new Error('DisconnectReason missing from Baileys export');
 const { color } = require('./lib/color');
 const readline = require("readline");
 const NodeCache = require("node-cache");
